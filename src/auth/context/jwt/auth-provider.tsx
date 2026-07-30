@@ -6,34 +6,51 @@ import axios, { endpoints } from 'src/utils/axios';
 //
 import { AuthContext } from './auth-context';
 import { isValidToken, setSession } from './utils';
-import { ActionMapType, AuthStateType, AuthUserType } from '../../types';
+import { ActionMapType, AuthStateType, AuthUserType, UserRole } from '../../types';
 
 // ----------------------------------------------------------------------
 
-// Hardcoded demo credentials (the remote demo API is unreliable, so the
-// demo login/session is handled entirely on the client).
-const DEMO_EMAIL = 'demo@minimals.cc';
-const DEMO_PASSWORD = 'demo1234';
-
-const DEMO_USER = {
-  id: '8864c717-587d-472a-929a-8e5f298024da-0',
-  displayName: 'Jaydon Frankie',
-  email: DEMO_EMAIL,
-  photoURL: '/assets/images/avatar/avatar_25.jpg',
-  phoneNumber: '+40 777666555',
-  country: 'United States',
-  address: '90210 Broadway Blvd',
-  state: 'California',
-  city: 'San Francisco',
-  zipCode: '94116',
-  about: 'Praesent turpis. Phasellus viverra nulla ut metus varius laoreet. Phasellus tempus.',
-  role: 'admin',
-  isPublic: true,
+// Hardcoded demo accounts (the remote demo API is unreliable, so the
+// demo login/session is handled entirely on the client). The email/username
+// used to log in is what determines the account's role.
+type DemoAccount = {
+  password: string;
+  id: string;
+  displayName: string;
+  role: UserRole;
 };
 
-function createDemoToken() {
+const DEMO_ACCOUNTS: Record<string, DemoAccount> = {
+  'admin@demo.com': {
+    password: 'admin1234',
+    id: '8864c717-587d-472a-929a-8e5f298024da-0',
+    displayName: 'Alex Admin',
+    role: 'admin',
+  },
+  'teacher@demo.com': {
+    password: 'teacher1234',
+    id: '9e5b1f2a-1c3d-4e5f-8a9b-0c1d2e3f4a5b',
+    displayName: 'Taylor Teacher',
+    role: 'teacher',
+  },
+  'student@demo.com': {
+    password: 'student1234',
+    id: '3f4a5b6c-7d8e-9f0a-1b2c-3d4e5f6a7b8c',
+    displayName: 'Sam Student',
+    role: 'student',
+  },
+};
+
+function createDemoToken(email: string, account: DemoAccount) {
   const header = { alg: 'none', typ: 'JWT' };
-  const payload = { user: DEMO_USER, exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 3 };
+  const user = {
+    id: account.id,
+    displayName: account.displayName,
+    email,
+    role: account.role,
+    photoURL: '/assets/images/avatar/avatar_25.jpg',
+  };
+  const payload = { user, exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 3 };
 
   const base64 = (obj: object) => window.btoa(JSON.stringify(obj));
 
@@ -163,20 +180,26 @@ export function AuthProvider({ children }: Props) {
 
   // LOGIN
   const login = useCallback(async (email: string, password: string) => {
-    if (email !== DEMO_EMAIL || password !== DEMO_PASSWORD) {
+    const account = DEMO_ACCOUNTS[email];
+
+    if (!account || account.password !== password) {
       throw new Error('Incorrect email or password');
     }
 
-    const accessToken = createDemoToken();
+    const accessToken = createDemoToken(email, account);
 
     setSession(accessToken);
+
+    const user = decodeDemoUser(accessToken);
 
     dispatch({
       type: Types.LOGIN,
       payload: {
-        user: DEMO_USER,
+        user,
       },
     });
+
+    return user;
   }, []);
 
   // REGISTER

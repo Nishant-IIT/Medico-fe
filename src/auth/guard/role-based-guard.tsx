@@ -1,10 +1,12 @@
+'use client';
+
 import { m } from 'framer-motion';
 // @mui
 import { Theme, SxProps } from '@mui/material/styles';
 import Container from '@mui/material/Container';
 import Typography from '@mui/material/Typography';
-// hooks
-import { useMockedUser } from 'src/hooks/use-mocked-user';
+// auth
+import { useAuthContext } from 'src/auth/hooks';
 // assets
 import { ForbiddenIllustration } from 'src/assets/illustrations';
 // components
@@ -20,11 +22,9 @@ type RoleBasedGuardProp = {
 };
 
 export default function RoleBasedGuard({ hasContent, roles, children, sx }: RoleBasedGuardProp) {
-  // Logic here to get current user role
-  const { user } = useMockedUser();
+  const { user } = useAuthContext();
 
-  // const currentRole = 'user';
-  const currentRole = user?.role; // admin;
+  const currentRole = user?.role;
 
   if (typeof roles !== 'undefined' && !roles.includes(currentRole)) {
     return hasContent ? (

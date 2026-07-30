@@ -17,7 +17,7 @@ import { paths } from 'src/routes/paths';
 import { RouterLink } from 'src/routes/components';
 import { useSearchParams, useRouter } from 'src/routes/hooks';
 // config
-import { PATH_AFTER_LOGIN } from 'src/config-global';
+import { getPathAfterLogin } from 'src/config-global';
 // hooks
 import { useBoolean } from 'src/hooks/use-boolean';
 // auth
@@ -47,8 +47,8 @@ export default function JwtLoginView() {
   });
 
   const defaultValues = {
-    email: 'demo@minimals.cc',
-    password: 'demo1234',
+    email: '',
+    password: '',
   };
 
   const methods = useForm({
@@ -64,9 +64,9 @@ export default function JwtLoginView() {
 
   const onSubmit = handleSubmit(async (data) => {
     try {
-      await login?.(data.email, data.password);
+      const user = await login?.(data.email, data.password);
 
-      router.push(returnTo || PATH_AFTER_LOGIN);
+      router.push(returnTo || getPathAfterLogin(user?.role));
     } catch (error) {
       console.error(error);
       reset();
@@ -133,7 +133,17 @@ export default function JwtLoginView() {
       {renderHead}
 
       <Alert severity="info" sx={{ mb: 3 }}>
-        Use email : <strong>demo@minimals.cc</strong> / password :<strong> demo1234</strong>
+        <Stack spacing={0.5}>
+          <span>
+            Admin: <strong>admin@demo.com</strong> / <strong>admin1234</strong>
+          </span>
+          <span>
+            Teacher: <strong>teacher@demo.com</strong> / <strong>teacher1234</strong>
+          </span>
+          <span>
+            Student: <strong>student@demo.com</strong> / <strong>student1234</strong>
+          </span>
+        </Stack>
       </Alert>
 
       {renderForm}
