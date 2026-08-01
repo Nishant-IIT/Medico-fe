@@ -49,9 +49,26 @@ export function useNavData() {
       // OVERVIEW
       // ----------------------------------------------------------------------
       {
-        subheader: 'overview v5.4.0',
+        subheader: 'overview',
         items: [
-          { title: 'one', path: paths.dashboard.root, icon: ICONS.dashboard },
+          {
+            title: 'Admin dashboard',
+            path: paths.dashboard.admin,
+            icon: ICONS.dashboard,
+            roles: ['admin'],
+          },
+          {
+            title: 'Teacher dashboard',
+            path: paths.dashboard.teacher,
+            icon: ICONS.dashboard,
+            roles: ['teacher'],
+          },
+          {
+            title: 'Student dashboard',
+            path: paths.dashboard.student,
+            icon: ICONS.dashboard,
+            roles: ['student'],
+          },
           { title: 'two', path: paths.dashboard.two, icon: ICONS.ecommerce },
           {
             title: 'three',
@@ -70,6 +87,7 @@ export function useNavData() {
             title: 'user',
             path: paths.dashboard.group.root,
             icon: ICONS.user,
+            roles: ['admin'],
             children: [
               { title: 'four', path: paths.dashboard.group.root },
               { title: 'five', path: paths.dashboard.group.five },

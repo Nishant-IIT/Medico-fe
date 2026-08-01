@@ -1,75 +1,18 @@
-// routes
-import { paths } from 'src/routes/paths';
-// utils
-import axios from 'src/utils/axios';
+import { UserRole } from '../../types';
 
 // ----------------------------------------------------------------------
 
-function jwtDecode(token: string) {
-  const base64Url = token.split('.')[1];
-  const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-  const jsonPayload = decodeURIComponent(
-    window
-      .atob(base64)
-      .split('')
-      .map((c) => `%${`00${c.charCodeAt(0).toString(16)}`.slice(-2)}`)
-      .join('')
-  );
+// Mirrors the public.app_role enum in Medico-be's
+// supabase/migrations/20260731061432_auth_rbac_profiles.sql. The JWT's
+// `user_role` claim (injected by custom_access_token_hook) is always one
+// of these three uppercase values; the UI works in lowercase.
+const ROLE_CLAIM_MAP: Record<string, UserRole> = {
+  ADMIN: 'admin',
+  TEACHER: 'teacher',
+  STUDENT: 'student',
+};
 
-  return JSON.parse(jsonPayload);
+/** Falls back to 'student' to mirror the hook's own `coalesce(..., 'STUDENT')`. */
+export function mapAppRole(claim: unknown): UserRole {
+  return ROLE_CLAIM_MAP[claim as string] ?? 'student';
 }
-
-// ----------------------------------------------------------------------
-
-export const isValidToken = (accessToken: string) => {
-  if (!accessToken) {
-    return false;
-  }
-
-  const decoded = jwtDecode(accessToken);
-
-  const currentTime = Date.now() / 1000;
-
-  return decoded.exp > currentTime;
-};
-
-// ----------------------------------------------------------------------
-
-export const tokenExpired = (exp: number) => {
-  // eslint-disable-next-line prefer-const
-  let expiredTimer;
-
-  const currentTime = Date.now();
-
-  // Test token expires after 10s
-  // const timeLeft = currentTime + 10000 - currentTime; // ~10s
-  const timeLeft = exp * 1000 - currentTime;
-
-  clearTimeout(expiredTimer);
-
-  expiredTimer = setTimeout(() => {
-    alert('Token expired');
-
-    sessionStorage.removeItem('accessToken');
-
-    window.location.href = paths.auth.jwt.login;
-  }, timeLeft);
-};
-
-// ----------------------------------------------------------------------
-
-export const setSession = (accessToken: string | null) => {
-  if (accessToken) {
-    sessionStorage.setItem('accessToken', accessToken);
-
-    axios.defaults.headers.common.Authorization = `Bearer ${accessToken}`;
-
-    // This function below will handle when token is expired
-    const { exp } = jwtDecode(accessToken); // ~3 days by minimals server
-    tokenExpired(exp);
-  } else {
-    sessionStorage.removeItem('accessToken');
-
-    delete axios.defaults.headers.common.Authorization;
-  }
-};
