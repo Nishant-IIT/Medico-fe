@@ -19,6 +19,14 @@ export const paths = {
   // DASHBOARD
   dashboard: {
     root: ROOTS.DASHBOARD,
+    admin: `${ROOTS.DASHBOARD}/admin`,
+    teacher: `${ROOTS.DASHBOARD}/teacher`,
+    student: `${ROOTS.DASHBOARD}/student`,
+    user: {
+      root: `${ROOTS.DASHBOARD}/user`,
+      list: `${ROOTS.DASHBOARD}/user/list`,
+      students: `${ROOTS.DASHBOARD}/user/students`,
+    },
     one: `${ROOTS.DASHBOARD}/one`,
     two: `${ROOTS.DASHBOARD}/two`,
     three: `${ROOTS.DASHBOARD}/three`,

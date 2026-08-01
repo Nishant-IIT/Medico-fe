@@ -7,7 +7,7 @@ import SvgColor from 'src/components/svg-color';
 // ----------------------------------------------------------------------
 
 const icon = (name: string) => (
-  (<SvgColor src={`/assets/icons/navbar/${name}.svg`} sx={{ width: 1, height: 1 }} />)
+  <SvgColor src={`/assets/icons/navbar/${name}.svg`} sx={{ width: 1, height: 1 }} />
   // OR
   // <Iconify icon="fluent:mail-24-filled" />
   // https://icon-sets.iconify.design/solar/
@@ -49,9 +49,26 @@ export function useNavData() {
       // OVERVIEW
       // ----------------------------------------------------------------------
       {
-        subheader: 'overview v5.4.0',
+        subheader: 'overview',
         items: [
-          { title: 'one', path: paths.dashboard.root, icon: ICONS.dashboard },
+          {
+            title: 'Admin dashboard',
+            path: paths.dashboard.admin,
+            icon: ICONS.dashboard,
+            roles: ['admin'],
+          },
+          {
+            title: 'Teacher dashboard',
+            path: paths.dashboard.teacher,
+            icon: ICONS.dashboard,
+            roles: ['teacher'],
+          },
+          {
+            title: 'Student dashboard',
+            path: paths.dashboard.student,
+            icon: ICONS.dashboard,
+            roles: ['student'],
+          },
           { title: 'two', path: paths.dashboard.two, icon: ICONS.ecommerce },
           {
             title: 'three',
@@ -67,14 +84,16 @@ export function useNavData() {
         subheader: 'management',
         items: [
           {
-            title: 'user',
-            path: paths.dashboard.group.root,
+            title: 'Users',
+            path: paths.dashboard.user.list,
             icon: ICONS.user,
-            children: [
-              { title: 'four', path: paths.dashboard.group.root },
-              { title: 'five', path: paths.dashboard.group.five },
-              { title: 'six', path: paths.dashboard.group.six },
-            ],
+            roles: ['admin'],
+          },
+          {
+            title: 'Students',
+            path: paths.dashboard.user.students,
+            icon: ICONS.user,
+            roles: ['teacher'],
           },
         ],
       },
