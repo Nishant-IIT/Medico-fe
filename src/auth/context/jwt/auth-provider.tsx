@@ -1,74 +1,13 @@
 'use client';
 
 import { useEffect, useReducer, useCallback, useMemo } from 'react';
-// utils
-import axios, { endpoints } from 'src/utils/axios';
+import type { Session } from '@supabase/supabase-js';
+// lib
+import { createClient } from 'src/lib/supabase/client';
 //
 import { AuthContext } from './auth-context';
-import { isValidToken, setSession } from './utils';
-import { ActionMapType, AuthStateType, AuthUserType, UserRole } from '../../types';
-
-// ----------------------------------------------------------------------
-
-// Hardcoded demo accounts (the remote demo API is unreliable, so the
-// demo login/session is handled entirely on the client). The email/username
-// used to log in is what determines the account's role.
-type DemoAccount = {
-  password: string;
-  id: string;
-  displayName: string;
-  role: UserRole;
-};
-
-const DEMO_ACCOUNTS: Record<string, DemoAccount> = {
-  'admin@demo.com': {
-    password: 'admin1234',
-    id: '8864c717-587d-472a-929a-8e5f298024da-0',
-    displayName: 'Alex Admin',
-    role: 'admin',
-  },
-  'teacher@demo.com': {
-    password: 'teacher1234',
-    id: '9e5b1f2a-1c3d-4e5f-8a9b-0c1d2e3f4a5b',
-    displayName: 'Taylor Teacher',
-    role: 'teacher',
-  },
-  'student@demo.com': {
-    password: 'student1234',
-    id: '3f4a5b6c-7d8e-9f0a-1b2c-3d4e5f6a7b8c',
-    displayName: 'Sam Student',
-    role: 'student',
-  },
-};
-
-function createDemoToken(email: string, account: DemoAccount) {
-  const header = { alg: 'none', typ: 'JWT' };
-  const user = {
-    id: account.id,
-    displayName: account.displayName,
-    email,
-    role: account.role,
-    photoURL: '/assets/images/avatar/avatar_25.jpg',
-  };
-  const payload = { user, exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 3 };
-
-  const base64 = (obj: object) => window.btoa(JSON.stringify(obj));
-
-  return `${base64(header)}.${base64(payload)}.demo-signature`;
-}
-
-function decodeDemoUser(accessToken: string) {
-  const base64Url = accessToken.split('.')[1];
-  const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-  const { user } = JSON.parse(window.atob(base64));
-  return user;
-}
-
-// ----------------------------------------------------------------------
-
-// NOTE:
-// We only build demo at basic level.
-// Customer will need to do some extra handling yourself if you want to extend the logic and other features...
+import { mapAppRole } from './utils';
+import { ActionMapType, AuthStateType, AuthUserType } from '../../types';
 
 // ----------------------------------------------------------------------
 
@@ -131,8 +70,6 @@ const reducer = (state: AuthStateType, action: ActionsType) => {
 
 // ----------------------------------------------------------------------
 
-const STORAGE_KEY = 'accessToken';
-
 type Props = {
   children: React.ReactNode;
 };
@@ -140,83 +77,88 @@ type Props = {
 export function AuthProvider({ children }: Props) {
   const [state, dispatch] = useReducer(reducer, initialState);
 
-  const initialize = useCallback(async () => {
-    try {
-      const accessToken = sessionStorage.getItem(STORAGE_KEY);
+  const supabase = useMemo(() => createClient(), []);
 
-      if (accessToken && isValidToken(accessToken)) {
-        setSession(accessToken);
+  // Role comes from the verified JWT claim (source of truth for RLS too);
+  // full_name comes from public.profiles since it isn't in the token.
+  const buildUser = useCallback(
+    async (session: Session): Promise<AuthUserType> => {
+      const { data, error } = await supabase.auth.getClaims(session.access_token);
 
-        const user = decodeDemoUser(accessToken);
+      if (error || !data) return null;
 
-        dispatch({
-          type: Types.INITIAL,
-          payload: {
-            user,
-          },
-        });
-      } else {
-        dispatch({
-          type: Types.INITIAL,
-          payload: {
-            user: null,
-          },
-        });
-      }
-    } catch (error) {
-      console.error(error);
-      dispatch({
-        type: Types.INITIAL,
-        payload: {
-          user: null,
-        },
-      });
-    }
-  }, []);
+      const { claims } = data;
 
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('full_name')
+        .eq('id', claims.sub)
+        .single();
+
+      return {
+        id: claims.sub,
+        email: claims.email,
+        displayName: profile?.full_name || claims.email,
+        role: mapAppRole(claims['user_role']),
+        photoURL: null,
+      };
+    },
+    [supabase]
+  );
+
+  // Fires immediately with the current session on mount, then again on
+  // every sign-in/sign-out/token-refresh (including from other tabs).
   useEffect(() => {
-    initialize();
-  }, [initialize]);
-
-  // LOGIN
-  const login = useCallback(async (email: string, password: string) => {
-    const account = DEMO_ACCOUNTS[email];
-
-    if (!account || account.password !== password) {
-      throw new Error('Incorrect email or password');
-    }
-
-    const accessToken = createDemoToken(email, account);
-
-    setSession(accessToken);
-
-    const user = decodeDemoUser(accessToken);
-
-    dispatch({
-      type: Types.LOGIN,
-      payload: {
-        user,
-      },
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      const user = session ? await buildUser(session) : null;
+      dispatch({ type: Types.INITIAL, payload: { user } });
     });
 
-    return user;
-  }, []);
+    return () => subscription.unsubscribe();
+  }, [supabase, buildUser]);
+
+  // LOGIN
+  const login = useCallback(
+    async (email: string, password: string) => {
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+
+      if (error) throw new Error(error.message);
+      if (!data.session) throw new Error('Login did not return a session');
+
+      const user = await buildUser(data.session);
+
+      dispatch({
+        type: Types.LOGIN,
+        payload: {
+          user,
+        },
+      });
+
+      return user;
+    },
+    [supabase, buildUser]
+  );
 
   // REGISTER
   const register = useCallback(
     async (email: string, password: string, firstName: string, lastName: string) => {
-      const data = {
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
-        firstName,
-        lastName,
-      };
+        options: { data: { full_name: `${firstName} ${lastName}` } },
+      });
 
-      const response = await axios.post(endpoints.auth.register, data);
+      if (error) throw new Error(error.message);
 
-      const { accessToken, user } = response.data;
+      if (!data.session) {
+        // Project has email confirmations enabled -- no session is issued
+        // until the user clicks the link in their inbox.
+        throw new Error('Check your inbox to confirm your email before signing in.');
+      }
 
-      sessionStorage.setItem(STORAGE_KEY, accessToken);
+      const user = await buildUser(data.session);
 
       dispatch({
         type: Types.REGISTER,
@@ -225,16 +167,16 @@ export function AuthProvider({ children }: Props) {
         },
       });
     },
-    []
+    [supabase, buildUser]
   );
 
   // LOGOUT
   const logout = useCallback(async () => {
-    setSession(null);
+    await supabase.auth.signOut();
     dispatch({
       type: Types.LOGOUT,
     });
-  }, []);
+  }, [supabase]);
 
   // ----------------------------------------------------------------------
 

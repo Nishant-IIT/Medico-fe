@@ -132,20 +132,6 @@ export default function JwtLoginView() {
     <FormProvider methods={methods} onSubmit={onSubmit}>
       {renderHead}
 
-      <Alert severity="info" sx={{ mb: 3 }}>
-        <Stack spacing={0.5}>
-          <span>
-            Admin: <strong>admin@demo.com</strong> / <strong>admin1234</strong>
-          </span>
-          <span>
-            Teacher: <strong>teacher@demo.com</strong> / <strong>teacher1234</strong>
-          </span>
-          <span>
-            Student: <strong>student@demo.com</strong> / <strong>student1234</strong>
-          </span>
-        </Stack>
-      </Alert>
-
       {renderForm}
     </FormProvider>
   );
