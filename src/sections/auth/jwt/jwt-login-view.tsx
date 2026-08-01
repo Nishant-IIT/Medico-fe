@@ -48,7 +48,7 @@ export default function JwtLoginView() {
 
   const defaultValues = {
     email: '',
-    password: '',
+    password: 'password123',
   };
 
   const methods = useForm({
