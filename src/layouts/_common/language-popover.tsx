@@ -15,12 +15,7 @@ export const allLangs = [
   {
     label: 'English',
     value: 'en',
-    icon: 'flagpack:gb-nir',
-  },
-  {
-    label: 'French',
-    value: 'fr',
-    icon: 'flagpack:fr',
+    icon: 'flagpack:in',
   },
   {
     label: 'Vietnamese',
