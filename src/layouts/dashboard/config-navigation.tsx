@@ -7,7 +7,7 @@ import SvgColor from 'src/components/svg-color';
 // ----------------------------------------------------------------------
 
 const icon = (name: string) => (
-  (<SvgColor src={`/assets/icons/navbar/${name}.svg`} sx={{ width: 1, height: 1 }} />)
+  <SvgColor src={`/assets/icons/navbar/${name}.svg`} sx={{ width: 1, height: 1 }} />
   // OR
   // <Iconify icon="fluent:mail-24-filled" />
   // https://icon-sets.iconify.design/solar/
@@ -84,15 +84,16 @@ export function useNavData() {
         subheader: 'management',
         items: [
           {
-            title: 'user',
-            path: paths.dashboard.group.root,
+            title: 'Users',
+            path: paths.dashboard.user.list,
             icon: ICONS.user,
             roles: ['admin'],
-            children: [
-              { title: 'four', path: paths.dashboard.group.root },
-              { title: 'five', path: paths.dashboard.group.five },
-              { title: 'six', path: paths.dashboard.group.six },
-            ],
+          },
+          {
+            title: 'Students',
+            path: paths.dashboard.user.students,
+            icon: ICONS.user,
+            roles: ['teacher'],
           },
         ],
       },

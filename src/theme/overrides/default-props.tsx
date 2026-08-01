@@ -182,11 +182,15 @@ export function defaultProps(theme: Theme) {
     },
     MuiTablePagination: {
       defaultProps: {
-        backIconButtonProps: {
-          size: 'small',
-        },
-        nextIconButtonProps: {
-          size: 'small',
+        slotProps: {
+          actions: {
+            previousButton: {
+              size: 'small',
+            },
+            nextButton: {
+              size: 'small',
+            },
+          },
         },
       },
     },
