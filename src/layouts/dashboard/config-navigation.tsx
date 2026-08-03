@@ -95,6 +95,38 @@ export function useNavData() {
             icon: ICONS.user,
             roles: ['teacher'],
           },
+          {
+            title: 'My cases',
+            path: paths.dashboard.scenarios.teacher,
+            icon: ICONS.folder,
+            roles: ['teacher'],
+          },
+          {
+            title: 'Case management',
+            path: paths.dashboard.scenarios.admin,
+            icon: ICONS.folder,
+            roles: ['admin'],
+          },
+        ],
+      },
+
+      // PATIENT SIMULATION
+      // ----------------------------------------------------------------------
+      {
+        subheader: 'simulation',
+        items: [
+          {
+            title: 'New case',
+            path: paths.dashboard.simulation.root,
+            icon: ICONS.chat,
+            roles: ['student'],
+          },
+          {
+            title: 'My history',
+            path: paths.dashboard.history.root,
+            icon: ICONS.folder,
+            roles: ['student'],
+          },
         ],
       },
     ],
