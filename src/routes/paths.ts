@@ -22,6 +22,18 @@ export const paths = {
     admin: `${ROOTS.DASHBOARD}/admin`,
     teacher: `${ROOTS.DASHBOARD}/teacher`,
     student: `${ROOTS.DASHBOARD}/student`,
+    simulation: {
+      root: `${ROOTS.DASHBOARD}/student/simulation`,
+      attempt: (id: string) => `${ROOTS.DASHBOARD}/student/simulation/${id}`,
+    },
+    history: {
+      root: `${ROOTS.DASHBOARD}/student/history`,
+      attempt: (id: string) => `${ROOTS.DASHBOARD}/student/history/${id}`,
+    },
+    scenarios: {
+      teacher: `${ROOTS.DASHBOARD}/teacher/scenarios`,
+      admin: `${ROOTS.DASHBOARD}/admin/scenarios`,
+    },
     user: {
       root: `${ROOTS.DASHBOARD}/user`,
       list: `${ROOTS.DASHBOARD}/user/list`,
