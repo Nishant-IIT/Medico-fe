@@ -41,7 +41,7 @@ export default function ScenarioTableRow({ row, variant, onUpdated, onDeleted }:
 
   const supabase = createClient();
 
-  const editDialog = useBoolean();
+  const formDialog = useBoolean();
   const rejectDialog = useBoolean();
   const deleteDialog = useBoolean();
   const submitting = useBoolean();
@@ -95,7 +95,7 @@ export default function ScenarioTableRow({ row, variant, onUpdated, onDeleted }:
 
   return (
     <>
-      <TableRow hover>
+      <TableRow hover sx={{ cursor: 'pointer' }} onClick={formDialog.onTrue}>
         <TableCell>
           <ListItemText
             primary={row.personaName}
@@ -123,14 +123,14 @@ export default function ScenarioTableRow({ row, variant, onUpdated, onDeleted }:
 
         <TableCell sx={{ whiteSpace: 'nowrap' }}>{fDate(row.updatedAt)}</TableCell>
 
-        <TableCell align="right" sx={{ px: 1, whiteSpace: 'nowrap' }}>
+        <TableCell align="right" sx={{ px: 1, whiteSpace: 'nowrap' }} onClick={(event) => event.stopPropagation()}>
           {submitting.value ? (
             <CircularProgress size={20} sx={{ mx: 1.5 }} />
           ) : (
             <>
               {canEdit && (
                 <Tooltip title="Edit" placement="top" arrow>
-                  <IconButton onClick={editDialog.onTrue}>
+                  <IconButton onClick={formDialog.onTrue}>
                     <Iconify icon="solar:pen-bold" />
                   </IconButton>
                 </Tooltip>
@@ -172,7 +172,13 @@ export default function ScenarioTableRow({ row, variant, onUpdated, onDeleted }:
         </TableCell>
       </TableRow>
 
-      <ScenarioFormDialog open={editDialog.value} onClose={editDialog.onFalse} scenario={row} onSaved={onUpdated} />
+      <ScenarioFormDialog
+        open={formDialog.value}
+        onClose={formDialog.onFalse}
+        scenario={row}
+        onSaved={onUpdated}
+        readOnly={!canEdit}
+      />
 
       {canReject && (
         <RejectScenarioDialog
