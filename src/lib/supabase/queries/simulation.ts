@@ -14,7 +14,12 @@ type AttemptRow = {
   reasoning_text: string | null;
   started_at: string;
   submitted_at: string | null;
+  timer_started_at: string | null;
+  duration_seconds: number | null;
 };
+
+const ATTEMPT_COLUMNS =
+  'id, body_part, persona_name, presenting_complaint, status, diagnosis_text, reasoning_text, started_at, submitted_at, timer_started_at, duration_seconds';
 
 function mapAttemptRow(row: AttemptRow): IAttempt {
   return {
@@ -27,6 +32,8 @@ function mapAttemptRow(row: AttemptRow): IAttempt {
     reasoningText: row.reasoning_text,
     startedAt: row.started_at,
     submittedAt: row.submitted_at,
+    timerStartedAt: row.timer_started_at,
+    durationSeconds: row.duration_seconds,
   };
 }
 
@@ -85,9 +92,7 @@ export async function fetchScenarioBodyParts(supabase: SupabaseClient): Promise<
 export async function fetchAttempts(supabase: SupabaseClient): Promise<IAttempt[]> {
   const { data, error } = await supabase
     .from('attempts')
-    .select(
-      'id, body_part, persona_name, presenting_complaint, status, diagnosis_text, reasoning_text, started_at, submitted_at'
-    )
+    .select(ATTEMPT_COLUMNS)
     .order('started_at', { ascending: false });
 
   if (error) throw new Error(error.message);
@@ -97,9 +102,7 @@ export async function fetchAttempts(supabase: SupabaseClient): Promise<IAttempt[
 export async function fetchAttemptById(supabase: SupabaseClient, attemptId: string): Promise<IAttempt> {
   const { data, error } = await supabase
     .from('attempts')
-    .select(
-      'id, body_part, persona_name, presenting_complaint, status, diagnosis_text, reasoning_text, started_at, submitted_at'
-    )
+    .select(ATTEMPT_COLUMNS)
     .eq('id', attemptId)
     .single();
 
@@ -148,6 +151,18 @@ export async function startAttempt(supabase: SupabaseClient, bodyPart: string): 
   const { data, error } = await supabase.functions.invoke('start-attempt', { body: { bodyPart } });
   if (error) throw new Error(error.message);
   return data as StartAttemptResult;
+}
+
+/**
+ * Marks an in-progress attempt as started (idempotent -- the first call sets
+ * `timer_started_at`; any later call, e.g. resuming from history, just
+ * returns the existing value so the clock never resets). Returns the
+ * authoritative server timestamp to anchor the client-side timer to.
+ */
+export async function startAttemptTimer(supabase: SupabaseClient, attemptId: string): Promise<string> {
+  const { data, error } = await supabase.rpc('start_attempt_timer', { p_attempt_id: attemptId });
+  if (error) throw new Error(error.message);
+  return data as string;
 }
 
 type SendMessageResult = {
