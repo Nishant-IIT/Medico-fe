@@ -30,6 +30,14 @@ export const paths = {
       root: `${ROOTS.DASHBOARD}/student/history`,
       attempt: (id: string) => `${ROOTS.DASHBOARD}/student/history/${id}`,
     },
+    physioSimulation: {
+      root: `${ROOTS.DASHBOARD}/student/physio-simulation`,
+      attempt: (id: string) => `${ROOTS.DASHBOARD}/student/physio-simulation/${id}`,
+    },
+    physioHistory: {
+      root: `${ROOTS.DASHBOARD}/student/physio-history`,
+      attempt: (id: string) => `${ROOTS.DASHBOARD}/student/physio-history/${id}`,
+    },
     scenarios: {
       teacher: `${ROOTS.DASHBOARD}/teacher/scenarios`,
       admin: `${ROOTS.DASHBOARD}/admin/scenarios`,

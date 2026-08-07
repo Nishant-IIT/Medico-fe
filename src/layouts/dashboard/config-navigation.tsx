@@ -129,6 +129,26 @@ export function useNavData() {
           },
         ],
       },
+
+      // PHYSIOTHERAPY SIMULATION
+      // ----------------------------------------------------------------------
+      {
+        subheader: 'physiotherapy',
+        items: [
+          {
+            title: 'New physio case',
+            path: paths.dashboard.physioSimulation.root,
+            icon: ICONS.chat,
+            roles: ['student'],
+          },
+          {
+            title: 'My physio history',
+            path: paths.dashboard.physioHistory.root,
+            icon: ICONS.folder,
+            roles: ['student'],
+          },
+        ],
+      },
     ],
     []
   );
