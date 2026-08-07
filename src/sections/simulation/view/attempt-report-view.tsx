@@ -14,9 +14,12 @@ import CircularProgress from '@mui/material/CircularProgress';
 // lib
 import { createClient } from 'src/lib/supabase/client';
 import { fetchAttemptById, fetchAttemptReport, fetchAttemptMessages } from 'src/lib/supabase/queries/simulation';
+// utils
+import { fElapsed } from 'src/utils/format-time';
 // types
 import type { IAttempt, IReport, IMessage } from 'src/types/simulation';
 // components
+import Iconify from 'src/components/iconify';
 import Scrollbar from 'src/components/scrollbar';
 import { useSettingsContext } from 'src/components/settings';
 //
@@ -84,9 +87,19 @@ export default function AttemptReportView({ attemptId }: Props) {
 
   return (
     <Container maxWidth={settings.themeStretch ? false : 'md'}>
-      <Typography variant="h4">
-        {attempt.personaName} — {attempt.bodyPart}
-      </Typography>
+      <Stack direction="row" sx={{ alignItems: 'center', justifyContent: 'space-between' }}>
+        <Typography variant="h4">
+          {attempt.personaName} — {attempt.bodyPart}
+        </Typography>
+
+        {attempt.durationSeconds != null && (
+          <Chip
+            icon={<Iconify icon="solar:clock-circle-bold" />}
+            label={`Time taken: ${fElapsed(attempt.durationSeconds)}`}
+            variant="soft"
+          />
+        )}
+      </Stack>
 
       <Typography sx={{ color: 'text.secondary', mt: 1, mb: 4 }}>{attempt.presentingComplaint}</Typography>
 

@@ -39,6 +39,7 @@ type Props = {
   onClose: VoidFunction;
   scenario?: IScenario;
   onSaved: (scenario: IScenario) => void;
+  readOnly?: boolean;
 };
 
 const ScenarioSchema: Yup.ObjectSchema<FormValuesProps> = Yup.object({
@@ -76,7 +77,7 @@ const EMPTY_VALUES: FormValuesProps = {
   differentials: '',
 };
 
-export default function ScenarioFormDialog({ open, onClose, scenario, onSaved }: Props) {
+export default function ScenarioFormDialog({ open, onClose, scenario, onSaved, readOnly }: Props) {
   const { enqueueSnackbar } = useSnackbar();
 
   const supabase = useMemo(() => createClient(), []);
@@ -84,6 +85,10 @@ export default function ScenarioFormDialog({ open, onClose, scenario, onSaved }:
   const knownBodyParts = useKnownBodyParts();
 
   const isEdit = !!scenario;
+
+  let dialogTitle = 'New case';
+  if (readOnly) dialogTitle = 'View case';
+  else if (isEdit) dialogTitle = 'Edit case';
 
   const defaultValues = useMemo<FormValuesProps>(
     () =>
@@ -154,7 +159,7 @@ export default function ScenarioFormDialog({ open, onClose, scenario, onSaved }:
   return (
     <Dialog fullWidth maxWidth="md" open={open} onClose={onClose}>
       <FormProvider methods={methods} onSubmit={onSubmit}>
-        <DialogTitle>{isEdit ? 'Edit case' : 'New case'}</DialogTitle>
+        <DialogTitle>{dialogTitle}</DialogTitle>
 
         <DialogContent>
           <Box
@@ -169,16 +174,22 @@ export default function ScenarioFormDialog({ open, onClose, scenario, onSaved }:
             <RHFTextField
               name="bodyPart"
               label="Body part"
+              disabled={readOnly}
               helperText={knownBodyParts.length ? `Existing: ${knownBodyParts.join(', ')}` : undefined}
             />
-            <RHFTextField name="problemCode" label="Problem code" helperText="e.g. GI-003" />
-            <RHFTextField name="personaName" label="Patient name" />
-            <RHFTextField name="correctDiagnosis" label="Correct diagnosis (answer key)" />
+            <RHFTextField name="problemCode" label="Problem code" disabled={readOnly} helperText="e.g. GI-003" />
+            <RHFTextField name="personaName" label="Patient name" disabled={readOnly} />
+            <RHFTextField
+              name="correctDiagnosis"
+              label="Correct diagnosis (answer key)"
+              disabled={readOnly}
+            />
 
             <Box sx={{ gridColumn: { sm: '1 / -1' } }}>
               <RHFTextField
                 name="presentingComplaint"
                 label="Presenting complaint (shown to students before they start)"
+                disabled={readOnly}
               />
             </Box>
 
@@ -188,6 +199,7 @@ export default function ScenarioFormDialog({ open, onClose, scenario, onSaved }:
                 label="Persona instructions"
                 multiline
                 rows={6}
+                disabled={readOnly}
                 helperText="Written in second person to the AI ('You are ..., a NN-year-old ...'). Describe the patient's story, personality, and exactly what to reveal only if asked. Remind it never to state the diagnosis or use clinical jargon."
               />
             </Box>
@@ -198,6 +210,7 @@ export default function ScenarioFormDialog({ open, onClose, scenario, onSaved }:
                 label="Key questions (comma separated)"
                 multiline
                 rows={2}
+                disabled={readOnly}
                 helperText="Questions a good history should cover -- used to score history-taking."
               />
             </Box>
@@ -208,6 +221,7 @@ export default function ScenarioFormDialog({ open, onClose, scenario, onSaved }:
                 label="Red flags (comma separated)"
                 multiline
                 rows={2}
+                disabled={readOnly}
                 helperText="Dangerous findings the student should identify or ask about."
               />
             </Box>
@@ -218,6 +232,7 @@ export default function ScenarioFormDialog({ open, onClose, scenario, onSaved }:
                 label="Differential diagnoses (comma separated)"
                 multiline
                 rows={2}
+                disabled={readOnly}
                 helperText="Other conditions a good student should consider and rule out."
               />
             </Box>
@@ -226,12 +241,14 @@ export default function ScenarioFormDialog({ open, onClose, scenario, onSaved }:
 
         <DialogActions>
           <Button variant="outlined" onClick={onClose}>
-            Cancel
+            {readOnly ? 'Close' : 'Cancel'}
           </Button>
 
-          <Button type="submit" variant="contained" loading={isSubmitting}>
-            {isEdit ? 'Save changes' : 'Create draft'}
-          </Button>
+          {!readOnly && (
+            <Button type="submit" variant="contained" loading={isSubmitting}>
+              {isEdit ? 'Save changes' : 'Create draft'}
+            </Button>
+          )}
         </DialogActions>
       </FormProvider>
     </Dialog>

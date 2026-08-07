@@ -14,6 +14,8 @@ export type IAttempt = {
   reasoningText: string | null;
   startedAt: string;
   submittedAt: string | null;
+  timerStartedAt: string | null;
+  durationSeconds: number | null;
 };
 
 export type IMessage = {
